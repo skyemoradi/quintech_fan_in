@@ -1,0 +1,1 @@
+Running cells with 'Python 3.12.9' requires the ipykernel package. <a href='command:jupyter.createPythonEnvAndSelectController'>Create a Python Environment</a> with the required packages. Or install 'ipykernel' using the command: '/opt/homebrew/bin/python3.12 -m pip install ipykernel -U --user --force-reinstall'
