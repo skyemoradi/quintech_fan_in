@@ -1,0 +1,1152 @@
+-- ========================================================================
+--
+--  QEC Quintech Electronics, Inc.
+--
+-- ========================================================================
+--
+-- QEC QXM MATRIX
+--
+-- Change History:
+--    9/10/15 creation
+--	  1/23/17 Correct errors and conformance to SMIv2 standards (JMR)
+--	  9/14/17 Add new objects inputAllRFLeveldBm & outputAllRFLeveldBm (MRD)
+--    9/20/17 Add QXO & QX2 unit types (MRD)
+--    11/13/17 Added new field in input control table for setting outputs 
+--             in fan in systems.  Added new input control table for setting
+--             only the outputs in fan in sytems.
+--    12/4/17 Add new objects for min/max effective input/output gain (MRD)
+--    3/1/18  Added QX1 unit type (BRS)
+--    4/24/18 Add LAN interfaces table to support devices with multiple
+--            network interfaces (MRD)
+--    11/5/18 Make input & output port names support 20 characters (MRD)
+--    6/17/19 Remove support for setting SNMP settings through SNMP (MRD)
+-- ========================================================================
+
+
+QEC-MATRIX-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF
+
+    Integer32, IpAddress, NOTIFICATION-TYPE, OBJECT-TYPE, enterprises,
+    MODULE-IDENTITY
+        FROM SNMPv2-SMI;
+
+qecMatrixMIB MODULE-IDENTITY
+    LAST-UPDATED "201906170000Z" -- Mon June 17 2019
+    ORGANIZATION "Quintech Electronics & Communications, Inc."
+    CONTACT-INFO
+		"Quintech Electronics & Communications, Inc.
+		250 Airport Road . Indiana, PA 15701 . USA
+		E-mail:       tphelps@qecinc.com
+		Phone:       724.349.1412 ext. 324
+		800.839.3658
+		Fax:           724.349.1421
+		Website:    http://www.quintechelectronics.com"
+    DESCRIPTION
+        "The Structure of Management Information for the
+        Quintech Electronics & Communications, Inc."
+    REVISION      "201906170000Z"
+    DESCRIPTION
+        "Quintech MIB module."
+    ::= { sysQecModules 1 } -- see sysQecModules defined below
+
+
+-- QEC Sys Admin Object Assignment
+-- QEC's nodes in the enterprise MIB is 20398
+
+quintech             OBJECT IDENTIFIER ::= { enterprises 20398 }
+sysQecModules        OBJECT IDENTIFIER ::= { quintech 10 }
+qecSysMIBConformance OBJECT IDENTIFIER ::= { quintech 11 }
+
+-- Qec Sys Matrix MIB admin object assignments
+--
+qecMatrix            OBJECT IDENTIFIER ::= { quintech 42 }
+systemInfo           OBJECT IDENTIFIER ::= { qecMatrix 1 }
+qpeInterface         OBJECT IDENTIFIER ::= { qecMatrix 2 } 
+userInterface        OBJECT IDENTIFIER ::= { qecMatrix 3 } 
+snmpInterface        OBJECT IDENTIFIER ::= { qecMatrix 4 } 
+controlsByInputs     OBJECT IDENTIFIER ::= { qecMatrix 5 } 
+controlsByOutputs    OBJECT IDENTIFIER ::= { qecMatrix 6 } 
+systemInformation    OBJECT IDENTIFIER ::= { qecMatrix 7 } 
+qecMatrixTraps       OBJECT IDENTIFIER ::= { qecMatrix 0 } -- compatibility with SNMPv1 .0 traps
+                                                           -- see notes below in notification definition
+lanInterfaces        OBJECT IDENTIFIER ::= { qecMatrix 8 }
+
+-- ## Device (Hardware information) ######################################
+-- Table for IP Traps
+-- The IP Traps Table contains an entry for each ip trap registered to this device
+ipTrapTable    OBJECT-TYPE
+    SYNTAX     SEQUENCE OF IpTrapEntry
+    MAX-ACCESS not-accessible
+    STATUS     obsolete
+    DESCRIPTION     
+        "This entity's Trap IP Addresses Table"
+    ::=  { qecMatrixTraps 1 }
+
+-- IP Trap entity definition
+ipTrapEntry    OBJECT-TYPE
+    SYNTAX     IpTrapEntry
+    MAX-ACCESS not-accessible
+    STATUS     obsolete
+    DESCRIPTION
+        "A Trap IP Address"
+    INDEX  { ipTrapIndex }
+    ::=  { ipTrapTable 1 }
+
+-- IP Trap Entry definition
+IpTrapEntry ::=
+    SEQUENCE {
+      ipTrapIndex    INTEGER,
+      ipTrapAddress  IpAddress
+    }
+
+
+
+        
+-- IP Trap Address
+ipTrapAddress  OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "A trap IP Address for this device.  A correctly configured SNMP trap
+         collector at this address will recieve traps when trap worthy activity
+         occurs."
+    ::=  { ipTrapEntry 2 }	
+	
+	
+ipTrapIndex    OBJECT-TYPE
+    SYNTAX     INTEGER (1..4)
+    MAX-ACCESS not-accessible
+    STATUS     obsolete
+    DESCRIPTION
+        "The index that uniquely identifies each IP Trap Address"
+    ::=  { ipTrapEntry 1 }
+
+
+
+-- ## Device Information ##########################################
+-- System Model
+
+sysModel OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Model type of the system"
+    ::= { systemInfo 1 }
+
+-- System Model Number
+
+sysModelNumber OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Model number of the system"
+    ::= { systemInfo 2 }
+
+-- System Protocol Version
+
+sysProtocolVer OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Command protocol version of the system"
+    ::= { systemInfo 3 }
+
+-- System Inputs
+
+sysInputs OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+                "Number of inputs in the system"
+    ::= { systemInfo 4 }
+
+-- System Outputs
+
+sysOutputs OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+                "Number of outputs in the system"
+    ::= { systemInfo 5 }
+
+-- ## QPE Interface Information ##########################################
+-- User Ethernet Interface DHCP switch
+
+qpeDHCPEnable OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "QPE Interface's Ethernet interface has DHCP turned off (statically assigned IP) or on"
+    ::= { qpeInterface 1 }
+
+-- Qpe Ethernet Interface IP Address
+
+qpeIpAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "QPE Interface's Ethernet IP Address"
+    ::= { qpeInterface 2 }
+
+-- Qpe Ethernet Interface Gateway Address
+
+qpeGwAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "QPE Interface's Ethernet Gateway Address"
+    ::= { qpeInterface 3 }
+
+-- Qpe Ethernet Interface Subnet Mask
+
+qpeSubnetMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "QPE Interface's Ethernet Subnet Mask"
+    ::= { qpeInterface 4 }
+
+-- Qpe MAC address
+
+qpeMacAddress OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(18))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "QPE Interface's Ethernet MAC address"
+    ::= { qpeInterface 5 }
+
+-- Firmware Version
+
+qpeFirmwareVer OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "QPE Firmware Version"
+    ::= { qpeInterface 6 }
+
+-- ## User Interface Information (ts/web/snmp/etc) #######################
+-- User Ethernet Interface DHCP switch
+
+userDHCPEnable OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "User Interface's Ethernet interface has DHCP turned off (statically assigned IP) or on"
+    ::= { userInterface 1 }
+
+-- User Ethernet Interface IP Address
+
+userIpAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "User Interface's Ethernet IP Address"
+    ::= { userInterface 2 }
+
+-- User Ethernet Interface Gateway Address
+
+userGwAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "User Interface's Ethernet Gateway Address"
+    ::= { userInterface 3 }
+
+-- User Ethernet Interface Subnet Mask
+
+userSubnetMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "User Interface's Ethernet Subnet Mask"
+    ::= { userInterface 4 }
+
+-- User MAC address
+
+userMacAddress OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(18))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "User Interface's Ethernet MAC address"
+    ::= { userInterface 5 }
+
+-- Firmware Version
+
+userFirmwareVer OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "User Interface Firmware Version"
+    ::= { userInterface 6 }
+
+-- ## SNMP Interface Configuration #######################################
+-- SNMP main enable disable switch
+
+snmpEnable OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface on off switch to enable SNMP traps and agent"
+    ::= { snmpInterface 1 }
+
+-- SNMP version (either 2 or 3 are supported)
+
+snmpVersion OBJECT-TYPE
+    SYNTAX     INTEGER
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface version 2 or 3 for traps and agent"
+    ::= { snmpInterface 2 }
+
+-- SNMP username
+
+snmpUsername OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..16))
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface username for traps and agent"
+    ::= { snmpInterface 3 }
+
+-- SNMP enable disapble for authentication
+
+snmpUseAuthKey OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface on/off switch for using an authentication string"
+    ::= { snmpInterface 4 }
+
+-- SNMP authentication key
+
+snmpAuthKey OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..16))
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface authentication string"
+    ::= { snmpInterface 5 }
+
+-- SNMP enable disable for encryption
+
+snmpUseEncryptKey OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface on/off switch for using an encryption string"
+    ::= { snmpInterface 6 }
+
+-- SNMP encryption key
+
+snmpEncryptKey OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..16))
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface encryption key"
+    ::= { snmpInterface 7 }
+
+-- SNMP enable disable for read community
+
+snmpUseReadCommunity OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface on/off switch for using a read only commmunity string"
+    ::= { snmpInterface 8 }
+
+-- SNMP read community
+
+snmpReadCommunity OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..16))
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface read only community string"
+    ::= { snmpInterface 9 }
+
+-- SNMP enable disable for write community
+
+snmpUseWriteCommunity OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface on/off switch for using a write commmunity string"
+    ::= { snmpInterface 10 }
+
+-- SNMP write community
+
+snmpWriteCommunity OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..16))
+    MAX-ACCESS read-write
+    STATUS     obsolete
+    DESCRIPTION
+        "SNMP Interface write community string"
+    ::= { snmpInterface 11 }
+
+-- SNMP auth protocol
+
+snmpAuthProtocol OBJECT-TYPE
+    SYNTAX      INTEGER { none(0), md5(1), sha(2) }
+    MAX-ACCESS  read-write
+    STATUS      obsolete
+    DESCRIPTION
+        "SNMP Interface authentication protocol"
+    ::= { snmpInterface 12 }
+
+-- SNMP priv protocol
+
+snmpPrivProtocol OBJECT-TYPE
+    SYNTAX      INTEGER { none(0), des(1), aes(2) }
+    MAX-ACCESS  read-write
+    STATUS      obsolete
+    DESCRIPTION
+        "SNMP Interface privacy protocol"
+    ::= { snmpInterface 13 }
+
+-- SNMP priv key
+
+snmpPrivKey OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..16))
+    MAX-ACCESS  read-write
+    STATUS      obsolete
+    DESCRIPTION
+        "SNMP Interface privacy key"
+    ::= { snmpInterface 14 }
+
+-- ## Crosspoint Table by Input ##########################################
+-- This table allows you to read crosspoint information by input
+
+crosspointInAllTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF CrosspointInAllEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"List of crosspoints; always displays the current
+		 switch status
+        "
+    ::= { controlsByInputs 1 }
+
+crosspointInAllEntry OBJECT-TYPE
+    SYNTAX          CrosspointInAllEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"One crosspoint (output) in the table"
+    INDEX { inputAllInChNr }
+    ::= { crosspointInAllTable 1 }
+
+CrosspointInAllEntry ::= SEQUENCE {
+    inputAllInChNr      INTEGER,
+    inputAllName        OCTET STRING (SIZE(1..20)),
+    inputAllGain        OCTET STRING (SIZE(1..8)),
+	inputAllRFLevel		INTEGER,
+    inputAllRFLeveldBm  OCTET STRING (SIZE(1..8)),
+    inputAllOutChNr     INTEGER,
+    inputAllLocked      INTEGER,
+    }
+
+inputAllInChNr OBJECT-TYPE
+    SYNTAX      INTEGER (0..2048)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"A unique value for each Entry. Its value
+         ranges between 1 and the value of Entrys. The
+         value for each interface must remain constant at
+         least from one re-initialization of the entity's
+         network management system to the next re-
+         initialization.
+         In this case, it is the number of the input channel
+		"
+    ::= { crosspointInAllEntry 1 }
+
+inputAllName OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..20))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Input name"
+    ::= { crosspointInAllEntry 2 }
+
+inputAllGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..8))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Input gain"
+    ::= { crosspointInAllEntry 3 }
+
+inputAllRFLevel OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION     
+		"The input RF Signal level in bars"
+    ::= { crosspointInAllEntry 4 }
+
+inputAllRFLeveldBm OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The input RF Signal level in dBm"
+    ::= { crosspointInAllEntry 5 }
+
+inputAllOutChNr OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "The output channel the input is connected to; 
+         0 means not connected to any output
+        "
+    ::= { crosspointInAllEntry 6 }
+
+inputAllLocked OBJECT-TYPE
+    SYNTAX     INTEGER { unlock(0), locked(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Input locked or unlocked"
+    ::= { crosspointInAllEntry 7 }
+
+-- Table of cross points
+crosspointInTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF CrosspointInEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "List of crosspoints; always displays the current
+         switch status.
+         If selectCrosspointSwitchingMode == 1, Set commands to
+         the table will be used to actually execute a switching request.
+         If selectCrosspointSwitchingMode == 2, the Set
+         commands will be ignored
+        "
+    ::= { controlsByInputs 2 }
+
+crosspointInEntry OBJECT-TYPE
+    SYNTAX          CrosspointInEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "One crosspoint (input) in the table"
+    INDEX { inInChNr }
+    ::= { crosspointInTable 1 }
+
+CrosspointInEntry ::= SEQUENCE {
+    inInChNr        INTEGER,
+    inOutChNr       INTEGER
+    }
+
+inInChNr OBJECT-TYPE
+    SYNTAX      INTEGER (0..2048)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A unique value for each Entry. Its value
+         ranges between 1 and the value of Entries. The
+         value for each interface must remain constant at
+         least from one re-initialization of the entity's
+         network management system to the next re-
+         initialization.
+         In this case, it is the number of the input channel
+        "
+    ::= { crosspointInEntry 1 }
+
+inOutChNr OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "The output channel the input is connected to; 
+         0 means not connected to any output
+        "
+    ::= { crosspointInEntry 2 }
+
+-- ## Crosspoint Tables by Output ########################################
+-- These table allow you to read crosspoint information and set crosspoints
+
+-- Table of rest of information for crosspoints by output
+crosspointOutAllTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF CrosspointOutAllEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"List of crosspoints; always displays the current
+		 switch status
+        "
+    ::= { controlsByOutputs 1 }
+
+crosspointOutAllEntry OBJECT-TYPE
+    SYNTAX          CrosspointOutAllEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"One crosspoint (output) in the table"
+    INDEX { outputAllOutChNr }
+    ::= { crosspointOutAllTable 1 }
+
+CrosspointOutAllEntry ::= SEQUENCE {
+    outputAllOutChNr     INTEGER,
+    outputAllName        OCTET STRING (SIZE(1..20)),
+    outputAllInChNr      INTEGER,
+    outputAllLocked      INTEGER,
+	outputAllAGCMode	 INTEGER,
+    outputAllGain        OCTET STRING (SIZE(1..8)),
+    outputAllRFLeveldBm  OCTET STRING (SIZE(1..8))
+    }
+
+outputAllOutChNr OBJECT-TYPE
+    SYNTAX      INTEGER (0..2048)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"A unique value for each Entry. Its value
+         ranges between 1 and the value of Entrys. The
+         value for each interface must remain constant at
+         least from one re-initialization of the entity's
+         network management system to the next re-
+         initialization.
+         In this case, it is the number of the output channel
+		"
+    ::= { crosspointOutAllEntry 1 }
+
+outputAllName OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..20))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Output name"
+    ::= { crosspointOutAllEntry 2 }
+
+outputAllInChNr OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION     
+		"The input channel the output is connected to; 
+		 0 means not connected to any input
+		"
+    ::= { crosspointOutAllEntry 3 }
+
+outputAllLocked OBJECT-TYPE
+    SYNTAX     INTEGER { unlock(0), locked(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Output locked or unlocked"
+    ::= { crosspointOutAllEntry 4 }
+
+outputAllAGCMode OBJECT-TYPE
+    SYNTAX     INTEGER { manual(0), agc(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Output gain mode is in AGC mode instead of manual"
+    ::= { crosspointOutAllEntry 5 }
+
+outputAllGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..8))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Output gain"
+    ::= { crosspointOutAllEntry 6 }
+
+outputAllRFLeveldBm OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(1..8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The output RF Signal level in dBm"
+    ::= { crosspointOutAllEntry 7 }
+
+-- Table of cross points
+crosspointOutTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF CrosspointOutEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"List of crosspoints; always displays the current
+		 switch status.
+         If selectCrosspointSwitchingMode == 1, Set commands to
+		 the table will be used to actually execute a switching request.
+         If selectCrosspointSwitchingMode == 2, the Set
+		 commands will be ignored
+        "
+    ::= { controlsByOutputs 2 }
+
+crosspointOutEntry OBJECT-TYPE
+    SYNTAX          CrosspointOutEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"One crosspoint (output) in the table"
+    INDEX { outOutChNr }
+    ::= { crosspointOutTable 1 }
+
+CrosspointOutEntry ::= SEQUENCE {
+    outOutChNr           INTEGER,
+    outInChNr            INTEGER
+    }
+
+outOutChNr OBJECT-TYPE
+    SYNTAX      INTEGER (0..2048)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"A unique value for each Entry. Its value
+         ranges between 1 and the value of Entrys. The
+         value for each interface must remain constant at
+         least from one re-initialization of the entity's
+         network management system to the next re-
+         initialization.
+         In this case, it is the number of the output channel
+		"
+    ::= { crosspointOutEntry 1 }
+
+outInChNr OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION     
+		"The input channel the output is connected to; 
+		 0 means not connected to any input
+		"
+    ::= { crosspointOutEntry 2 }
+
+-- ## System Information and Status ######################################
+-- System Inputs
+
+sysInfoInputs OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+                "Number of inputs in all modules combined"
+    ::= { systemInformation 1 }
+
+-- System Outputs
+
+sysInfoOutputs OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+                "Number of outputs in all modules combined"
+    ::= { systemInformation 2 }
+
+-- These tables allow you to read system information and status specifically for modules
+
+-- Table of module configuration information
+sysInfoModules OBJECT-TYPE
+    SYNTAX          SEQUENCE OF SysInfoModulesEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"List of modules currently present in the system"
+    ::= { systemInformation 3 }
+
+sysInfoModulesEntry OBJECT-TYPE
+    SYNTAX          SysInfoModulesEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"One module in the table"
+    INDEX { sysInfoModulesIndex }
+    ::= { sysInfoModules 1 }
+
+SysInfoModulesEntry ::= SEQUENCE {
+    sysInfoModulesIndex                     INTEGER,
+    sysInfoModulesType                      INTEGER,
+    sysInfoModulesAddress                   INTEGER,
+    sysInfoModulesInputs                    INTEGER,
+    sysInfoModulesOutputs                   INTEGER,
+    sysInfoModulesMinInput                  INTEGER,
+    sysInfoModulesMaxInput                  INTEGER,
+    sysInfoModulesMinOutput                 INTEGER,
+    sysInfoModulesMaxOutput                 INTEGER,
+    sysInfoModulesGain                      OCTET STRING (SIZE(8)),
+    sysInfoModulesMinGain                   OCTET STRING (SIZE(8)),
+    sysInfoModulesMaxGain                   OCTET STRING (SIZE(8)),
+    sysInfoModulesMinEffectiveInputGain     OCTET STRING (SIZE(8)),
+    sysInfoModulesMaxEffectiveInputGain     OCTET STRING (SIZE(8)),
+    sysInfoModulesMinEffectiveOutputGain    OCTET STRING (SIZE(8)),
+    sysInfoModulesMaxEffectiveOutputGain    OCTET STRING (SIZE(8)),
+    }
+
+sysInfoModulesIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..128)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Index number of module"
+    ::= { sysInfoModulesEntry 1 }
+
+sysInfoModulesType OBJECT-TYPE
+    SYNTAX      INTEGER { xrm(0), xro(1), xrd(2), qec(3), qe3(4), qeo(5), qxm(6), qxd(7), qxo(8), qx2(9), qx1(10), inv(11) }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Module Type"
+    ::= { sysInfoModulesEntry 2 }
+
+sysInfoModulesAddress OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Address of module"
+    ::= { sysInfoModulesEntry 3 }
+
+sysInfoModulesInputs OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Number of inputs in module"
+    ::= { sysInfoModulesEntry 4 }
+
+sysInfoModulesOutputs OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Number of outputs in module"
+    ::= { sysInfoModulesEntry 5 }
+
+sysInfoModulesMinInput OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Minimum input number of module"
+    ::= { sysInfoModulesEntry 6 }
+
+sysInfoModulesMaxInput OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Maximum input number of module"
+    ::= { sysInfoModulesEntry 7 }
+
+sysInfoModulesMinOutput OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Minimum output number of module"
+    ::= { sysInfoModulesEntry 8 }
+
+sysInfoModulesMaxOutput OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Maximum output number of module"
+    ::= { sysInfoModulesEntry 9 }
+
+sysInfoModulesGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     obsolete
+    DESCRIPTION
+        "Gain of module"
+    ::= { sysInfoModulesEntry 10 }
+
+sysInfoModulesMinGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     obsolete
+    DESCRIPTION
+        "Minimum gain of module"
+    ::= { sysInfoModulesEntry 11 }
+
+sysInfoModulesMaxGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     obsolete
+    DESCRIPTION
+        "Maximum gain of module"
+    ::= { sysInfoModulesEntry 12 }
+
+sysInfoModulesMinEffectiveInputGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Minimum effective input gain of module"
+    ::= { sysInfoModulesEntry 13 }
+
+sysInfoModulesMaxEffectiveInputGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Maximum effective input gain of module"
+    ::= { sysInfoModulesEntry 14 }
+
+sysInfoModulesMinEffectiveOutputGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Minimum effective output gain of module"
+    ::= { sysInfoModulesEntry 15 }
+
+sysInfoModulesMaxEffectiveOutputGain OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(8))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Maximum effective output gain of module"
+    ::= { sysInfoModulesEntry 16 }
+
+
+
+-- Table of module configuration information
+sysInfoModulesStat OBJECT-TYPE
+    SYNTAX          SEQUENCE OF SysInfoModulesStatEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"List of statuses for modules currently present in the system"
+    ::= { systemInformation 4 }
+
+sysInfoModulesStatEntry OBJECT-TYPE
+    SYNTAX          SysInfoModulesStatEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+		"One module status in the table"
+    INDEX { sysInfoModulesStatIndex }
+    ::= { sysInfoModulesStat 1 }
+
+SysInfoModulesStatEntry ::= SEQUENCE {
+    sysInfoModulesStatIndex   INTEGER,
+    sysInfoModulesStatType    INTEGER,
+    sysInfoModulesStatAddress INTEGER,
+    sysInfoModuleStatFan1     INTEGER,
+    sysInfoModuleStatFan2     INTEGER,
+    sysInfoModuleStatFan3     INTEGER,
+    sysInfoModuleStatFan4     INTEGER,
+    sysInfoModuleStatFan5     INTEGER,
+    sysInfoModuleStatCpu      INTEGER,
+    sysInfoModuleStatTemp     INTEGER,
+    sysInfoModuleStatPS1      INTEGER,
+    sysInfoModuleStatPS2      INTEGER
+    }
+
+sysInfoModulesStatIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..128)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Index number of module status"
+    ::= { sysInfoModulesStatEntry 1 }
+
+sysInfoModulesStatType OBJECT-TYPE
+    SYNTAX      INTEGER { xrm(0), xro(1), xrd(2), qed(3), qe3(4), qeo(5), qxm(6), qxd(7), qxo(8), qx2(9), qx1(10), inv(11) }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Module Type"
+    ::= { sysInfoModulesStatEntry 2 }
+
+sysInfoModulesStatAddress OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+		"Address of module"
+    ::= { sysInfoModulesStatEntry 3 }
+
+sysInfoModuleStatFan1 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Fan 1 alarm indicator"
+    ::= { sysInfoModulesStatEntry 4 }
+
+sysInfoModuleStatFan2 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Fan 2 alarm indicator"
+    ::= { sysInfoModulesStatEntry 5 }
+
+sysInfoModuleStatFan3 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Fan 3 alarm indicator"
+    ::= { sysInfoModulesStatEntry 6 }
+
+sysInfoModuleStatFan4 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Fan 4 alarm indicator"
+    ::= { sysInfoModulesStatEntry 7 }
+
+sysInfoModuleStatFan5 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Fan 5 alarm indicator"
+    ::= { sysInfoModulesStatEntry 8 }
+
+sysInfoModuleStatCpu OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "A card on the module is over the temperature threshold"
+    ::= { sysInfoModulesStatEntry 9 }
+
+sysInfoModuleStatTemp OBJECT-TYPE
+    SYNTAX     INTEGER
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Highest temperature reading in the module"
+    ::= { sysInfoModulesStatEntry 10 }
+
+sysInfoModuleStatPS1 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Power supply 1 alarm indicator"
+    ::= { sysInfoModulesStatEntry 11 }
+
+sysInfoModuleStatPS2 OBJECT-TYPE
+    SYNTAX     INTEGER { normal(0), alarm(1) }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Power supply 2 alarm indicator"
+    ::= { sysInfoModulesStatEntry 12 }
+
+
+-- ## LAN Interfaces Information ##########################################
+lanInterfacesTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF LanInterfaceEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+        "List of settings for LAN interfaces"
+    ::= { lanInterfaces 1 }
+
+lanInterfaceEntry OBJECT-TYPE
+    SYNTAX          LanInterfaceEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION     
+        "One LAN interface in the table"
+    INDEX { lanInterfaceNr }
+    ::= { lanInterfacesTable 1 }
+
+LanInterfaceEntry ::= SEQUENCE {
+    lanInterfaceNr      INTEGER,
+    lanDHCPEnable       INTEGER,
+    lanIpAddress        IpAddress,
+    lanGwAddress        IpAddress,
+    lanSubnetMask       IpAddress,
+    lanMacAddress       OCTET STRING (SIZE(18))
+}
+
+lanInterfaceNr OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION 
+        "Number identifying the LAN interface"
+    ::= { lanInterfaceEntry 1 }
+
+    -- LAN Interface DHCP switch
+
+lanDHCPEnable OBJECT-TYPE
+    SYNTAX     INTEGER { off(0), on(1) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "LAN interface has DHCP turned off (statically assigned IP) or on"
+    ::= { lanInterfaceEntry 2 }
+
+-- LAN Interface IP Address
+
+lanIpAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "LAN interface IP Address"
+    ::= { lanInterfaceEntry 3 }
+
+-- LAN Interface Gateway Address
+
+lanGwAddress OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "LAN interface Gateway Address"
+    ::= { lanInterfaceEntry 4 }
+
+-- LAN Interface Subnet Mask
+
+lanSubnetMask OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "LAN interface Subnet Mask"
+    ::= { lanInterfaceEntry 5 }
+
+-- LAN Interface MAC address
+
+lanMacAddress OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE(18))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "LAN interface MAC address"
+    ::= { lanInterfaceEntry 6 }
+
+END

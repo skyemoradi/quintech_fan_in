@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: csidof
+Version: 0.1.0
+Summary: CSI dictionary of fields YAML definitions converted to Pydantic datamodels using datamodel-codegen
+Author: Hugo Trappe
+Author-email: hugo@mitre.org
+Requires-Python: >=3.10,<4.0
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Dist: pydantic (>=1.10.8,<2.0.0)
+Description-Content-Type: text/markdown
+
+

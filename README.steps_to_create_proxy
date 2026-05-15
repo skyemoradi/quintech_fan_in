@@ -1,0 +1,129 @@
+Steps to create proxy
+
+1 - Obtain the Make and Model number for your device
+        ex: Make - Tripplite, Model - PDUMH20
+        Ensure this is desciptive and unique to the specific device(s) you intend your proxy for.
+
+2 - Rename the following files. Remain consistent with captialization of placeholder.
+        This ensures that all variable names will match up.
+        src/csi_make_model
+        src/make_model/make_model_settings.py
+        src/make_model/make_model_mocker.py
+        src/test/test_snmp_poller_make_model.py
+        src/test/test_snmp_setter_make_model.py
+
+3 - Fill in Make and Model throughout files. Remain consistent with captialization of placeholder.
+        This ensures that all variable names will match up.
+        If you make changes, make sure to make them consistent and test by building the proxy.
+        ex: csi_make_model -> csi_tripplite_pdumh20
+        ex: MakeMODELSettings -> TripplitePDUMH20Settings
+
+        Placeholders can be found by searching for 'csi/make', csi_make, 'makemodel', 'make_model'
+        'Make CSI', 'MAKE_MOCK' and 'Make Model' or by making all the replacements in the following files:
+
+        .env   
+                PROXY_NAME=csi_make_model
+                SVC_NAME=csi_make_model_0
+        csi_properties.yml     
+                service_name: csi_make_model_0
+        pyproject.toml
+                name = "csi_make_model"
+                description = "FastAPI-based proxy for Make Model"
+        jupyter/test_harness.ipynb
+                SERVICE_URL = maestro_url + '/service/csi_make_model_0'
+        src/csi_make_model/__init__.py
+                from .make_model_settings import MakeMODELSettings
+                from .make_model_mocker import MAKE_TEST
+        src/csi_make_model/main.py
+                from make_model_settings import MakeMODELSettings
+                logging.info("Welcome to the Make CSI Proxy...")
+        src/csi_make_model/make_model_mocker.py
+                class MAKE_TEST(unittest.TestCase):
+                with mocker.patch.object(SnmpPoller, 'perform_poll', new=MAKE_TEST.mock_poll):
+                with mocker.patch.object(snmp_poller, 'restart_snmp_poller', new=MAKE_TEST.mock_restart_snmp_poller):
+                with mocker.patch.object(snmp_setter.Session, 'set', new=MAKE_TEST.mock_session_set):
+                with mocker.patch.object(snmp_setter, 'restart_snmp_poller', new=MAKE_TEST.mock_restart_snmp_poller):
+        src/csi_make_model/make_model_settings.py
+                class MakeMODELSettings(BaseModel):
+                return MakeMODELSettings.initialize_settings(CSI)
+                default_settings = MakeMODELSettings().dict()
+                current_settings = MakeMODELSettings().dict()
+                MakeMODELSettings.initialize_discover(CSI)
+                discover_settings = MakeMODELSettings().schema()
+                validated_settings = MakeMODELSettings(**current_settings).dict()
+                "device": {"make": "Device Make",
+        src/csi_make_model/proxy_backend.py
+                from make_model_settings import MakeMODELSettings
+                from make_model_mocker import MAKE_TEST
+                self._msgdata = MakeMODELSettings.initialize_database()
+                MAKE_TEST.mock_restart_snmp_poller()
+                ProxyBackend.__poll_job = schedule.every(poll_interval).seconds.do(MAKE_TEST.mock_restart_snmp_poller)
+                current_settings = MakeMODELSettings.initialize_reflector_settings(CSI)
+                __mock_msgdata = MakeMODELSettings.initialize_reflector_settings(CSI)
+                MAKE_TEST.mock_restart_snmp_poller()
+                ProxyBackend.__poll_job = schedule.every(poll_interval).seconds.do(MAKE_TEST.mock_restart_snmp_poller)
+                MAKE_TEST.mock_perform_snmp_set(incoming_msgdata)
+        README.md
+                Make MODEL Proxy README file
+
+4 - Other updates that will need to be made:
+        .env    # Replace with a unique port
+                SVC_PORT_INT=81XX
+                SVC_PORT_EXT=81XX
+                # Add DBPASS if needed
+                DBPASS=example
+        csi_properties.yml      #update fields for your requirements and comms information
+                heartbeat_interval_msecs: [default: 5]
+                keepalive_secs: [default: 60]
+                poll_interval: [default: 60]
+
+                debug_mode: ['OFF'] #see csi_properties.yml for more information
+
+                default_ip_address: [device ip]
+                default_snmp_version: [1, 2 or 3]
+                default_read_community: [typically public]
+                default_write_community: [typically private]
+        README.md      
+                Update status date and text to be descriptive of your device.
+
+5 - Test build to ensure your names are correct and everything works as expected.
+        $ make all
+
+6 - Obtain the MIB(s) for your device, place into 'mibs' directory
+
+7 - Test MIBs using snmpwalk and snmpset to find MIBs that work and match fields in the DoF.
+
+8 - snmp to dof mapping and settings file
+        Add mappings to the schemas/snmp_to_dof_mapping.yml file in the format of the provided example.
+        Mappings must all be inside the 'properties' field.
+        ex:
+                exampleMIB:
+                        #set to true if MIB has an OID index, false or omit if not
+                        use_oid_index: true
+                        #required: map to DoF name
+                        dof_name:
+                        example.ports.status
+                        #set to true for R/W fields, false or omit if not
+                        settable: true
+        OIDs to be polled to retrieve the wanted MIBs should be provided at the bottom using 
+        the 'polled_oids' field
+        ex:
+                polled_oids:
+                        - example
+                        - example2
+
+9 - custom code
+        Each field in the DoF is only complete if there is a 1:1 mapping with a MIB.
+        Sometimes fields require some custom code to match the DoF.
+        For example, if the units are different they will need to be changed to match
+        or when two MIB values are needed to fulfil one DoF value, like when one field
+        is used for reading and one for writing. Both examples are shown below and a more
+        in depth explanation of the code can be viewed in the tutorial.
+
+10 - Test proxy using jupyter notebook test harness.
+        Launch the jupyter notebook:
+        $ cd jupyter
+        $ ./launcher.sh
+        Click on the first box and click play on each until you reach the bottom.
+        Ensure there are no errors and at the bottom there should be a box where you can send
+        test JSON to your proxy, and one where you can test snmp commands.

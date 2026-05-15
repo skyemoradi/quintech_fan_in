@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "csidof"
+version = "0.1.0"
+description = "CSI dictionary of fields YAML definitions converted to Pydantic datamodels using datamodel-codegen"
+authors = ["Hugo Trappe <hugo@mitre.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^1.10.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,27 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+# 
+# This playbook sanitizes all available CSI PDK services
+# Stops and removes all docker containers
+#
+# Must pass in {{ csi_image_name }} and {{ csi_service_name }}
+
+- name: Stop service
+  become_user: "{{ ansible_user }}"
+  shell: "docker container stop {{ csi_service_name }}"
+  ignore_errors: yes
+
+- name: Remove files from service directory under csifs 
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/csifs/services/{{ csi_service_name }}"
+    state: absent
+
+- name: Remove container
+  become_user: "{{ ansible_user }}"
+  shell: "docker container rm -f {{ csi_service_name }}"
+  ignore_errors: yes
+  
+- name: Remove image
+  become_user: "{{ ansible_user }}"
+  shell: "docker image rm -f {{ csi_image_name }}"
+  ignore_errors: yes

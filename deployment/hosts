@@ -1,0 +1,3 @@
+[endpoints]
+localhost ansible_user='csi'
+

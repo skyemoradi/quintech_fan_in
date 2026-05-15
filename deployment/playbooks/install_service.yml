@@ -1,0 +1,13 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+# 
+# This playbook installs a service
+#
+
+- hosts: all
+  remote_user: csi
+  become: yes
+  become_method: sudo
+
+  roles:
+    - role: install_service

@@ -1,0 +1,20 @@
+README.md 
+
+PROXY INSTALLATION 
+
+make all - build and run the proxy
+
+make build - build the proxy using docker-compose build
+
+make up - run the proxy using docker-compose up
+
+For more 'make' details please refer to the tutorial
+
+Notes
+
+If necessary, may need to set the database password in .env:
+For example:
+
+DBPASS="NNoAavSlmUQeAqB7vH9wxSiHAhBPCcxij6oYRKC9cok="
+
+###

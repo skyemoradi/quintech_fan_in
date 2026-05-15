@@ -1,0 +1,11 @@
+version: "2.3"
+services:
+  csi_client:
+    image: $COMPOSE_PROJECT_NAME:latest
+    container_name: $COMPOSE_PROJECT_NAME
+    build:
+      context: .
+    command: ./build.sh && ./info.sh
+    volumes:
+    - $XFER_EXT:$XFER_INT
+    network_mode: host

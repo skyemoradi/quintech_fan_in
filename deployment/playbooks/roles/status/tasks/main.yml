@@ -1,0 +1,10 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+# 
+# This playbook runs standard monitoring tasks
+# 
+
+- name: running docker container ls
+  shell: docker container ls
+  register: results
+

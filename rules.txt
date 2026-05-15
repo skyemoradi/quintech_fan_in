@@ -1,0 +1,84 @@
+i have to build an rf fan in proxy (CSI VM/csi-pdk-5.3.2-20260202/csi-pdk/csi_quintech_RF_Matrix/src/csi_quintech_rf_matrix). 
+
+Context:
+- This is for a Fan in (many inputs to one output)
+- the dof expects parameters.input_ports[in_idx].connected_outputs[] (which is a list)
+- Dof will always need the strings in connected_outputs to be formatted “outX” where X is the port number for the output port
+- The DOF defines connected_outputs as strings, but the SNMP OID outputAllInChNr likely expects an Integer.
+
+The firmware behavior is the source of truth — NOT the MIB descriptions.
+The hardware firmware is INPUT-INDEXED ONLY.
+This applies to the following MIB OIDs:
+* outInChNr
+* outputAllInChNr
+* outputAllOutChNr
+* inOutChNr
+* inInChNr
+* inputAllOutChNr
+Regardless of what the MIB says:
+* index = INPUT PORT
+* value = OUTPUT PORT
+Example:outputAllInChNr.6 = 4, ACTUALLY means:input 6 → output 4, NOT:output 6 ← input 4
+it may not cause any problems for me, but do not try to fix this, just keep in mind for your design. 
+
+USER COMMANDS
+- If a user sends multiple outputs in the connected_outputs list, the proxy must select the first and log a warning (Fan-In limitation)
+- If I issue 2 separate snmp sets ("parameters": {"input_ports": {"6": {"connected_outputs": [“out2”]}}, then later "input_ports": {"6": {"connected_outputs": [“out5”]}}}), the proxy/hardware must update to the output port in the second snmp so it would read "parameters": {"input_ports": {"6": {"connected_outputs": [“out5”]}} and “parameters": {"input_ports": {"6": {"connected_outputs": [“out5"]}}}
+- CLEARING: Outputs can be removed from being connected to an input when an snmp set is sent where the connected_outputs list = "0" or “”. 
+
+RELEVANT FILES
+- there is a sample snmpwalk.txt (csi-pdk-5.3.2-20260202/csi-pdk/csi_quintech_RF_Matrix/snmpwalk.txt) 
+- dof is /Users/smoradi/Desktop/CSI VM/csi-pdk-5.3.2-20260202/csi-pdk/csi_quintech_RF_Matrix/dof-rf.txt
+- Overview of CSI /Users/smoradi/Desktop/CSI_INTRO.txt
+
+RULES 
+- Perform deep analysis  
+- During your thinking phase: before developing a design or plan, develop a plan by working backwards from the goal to the steps and actions required to accomplish it.
+- IMPORTANT: Don't make things up. Read the source code, documenation, and answer based on that. If you are not sure, say it clear.
+- Before proposing changes:
+    - inspect existing proxy implementations
+    - reuse existing CSI proxy patterns
+    - follow established project conventions
+    - NOTE: if they did it in a poor coding practice way, do not execute their design. If they did something wrong or if our contexts are not the same, do not prefer theirs. Use judgement. Keep context of the applications in mind.
+- Prefer:
+    - incremental implementation
+    - minimal disruption to existing architecture
+- Avoid:
+    - broad refactors
+    - unnecessary renaming
+    - restructuring unrelated code
+    - introducing new abstractions without strong justification
+- If repository details are missing:  clearly state assumptions explain uncertainty
+
+When creating an implementation plan, you MUST produce a fully actionable code modification guide, not a high-level summary.
+
+IF you are building an implementation plan, for EACH step you are required to provide:
+- Context, what is happening here, what is this code for
+- purpose - Explain the exact goal of this specific modification.
+- CHANGE TYPE - ADD, REPLACE, DELETE, MODIFY
+- location including file name and the line numbers (one sentence on what it should be before/after) where I am to edit
+- completed after snippet of the code that I am adding and lines numbers in the file where I am adding it. 
+- Thorough explanation of the new code (what is going on, how is it implemented, how is it designed, how does it tie back in to the greater context)
+- context in the code
+- For change-type = replace: show BOTH the OLD code and the NEW code
+- explain how execution reaches this code - what calls this code, what data enters this code
+
+- If a schema/model/type changes, you MUST include every downstream usage that must also change.
+- If one modification requires another modification elsewhere in the codebase, you MUST include both.
+- Do NOT describe changes abstractly. Show the exact code I need to add/change/remove.
+
+THINGS TO KEEP IN MIND:
+- Good coding practices!!!! (Threading, etc.)
+
+Provide an ordered to do list at the end. when I implement/ask for an implementation plan, I will need to do in piecewise and need it to be working and testable after each functionality implementation.
+
+DO NOT:
+- DO NOT EDIT THE CODE YOURSELF
+- DO NOT provide high-level generic advice.
+- DO NOT develop test files
+- DO NOT assume output-indexed routing exists in firmware anywhere.
+- DO NOT propose output-indexed writes.
+- DO NOT trust the MIB semantics over observed firmware behavior.
+- Firmware behavior is authoritative.
+
+the implementation plan should be as thorough and concrete  as possible and implementation-oriented. explanation should be  as thorough as possible.

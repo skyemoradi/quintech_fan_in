@@ -1,0 +1,36 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+#
+# This playbook installs a service onto a CSI PDK installation
+# 
+# {{ csi_tarball }} is passed in as an environment variable
+#
+
+- name: Copy tarball
+  ansible.builtin.copy:
+    src: "../tarballs/{{ csi_tarball }}"
+    dest: /home/{{ ansible_user }}/csifs/tarballs
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Get basename of csi_tarball
+  shell: basename {{ csi_tarball }}
+  register: csi_tarball_basename
+
+# - name: display csi_tarball_basename variable
+#   debug:
+#     var: csi_tarball_basename.stdout_lines.0
+
+- name: Extract tarball into the services directory
+  shell: "cd /home/{{ ansible_user }}/csifs/services ; tar xf ../tarballs/{{ csi_tarball_basename.stdout_lines.0 }}"
+
+- name: Deploy service
+  become_user: "{{ ansible_user }}"
+  shell: "cd /home/{{ ansible_user }}/csifs/services/{{ csi_service_dir }} ; docker-compose stop ; docker-compose rm -f ; docker-compose up -d < /dev/null"
+  ignore_errors: yes
+
+- name: Clean up service tar file
+  ansible.builtin.file:
+    path: " /home/{{ ansible_user }}/csifs/tarballs/{{ csi_tarball_basename.stdout_lines.0 }}"
+    state: absent

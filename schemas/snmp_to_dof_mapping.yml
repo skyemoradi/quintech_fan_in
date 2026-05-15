@@ -1,0 +1,87 @@
+# match up snmp with json settings
+
+properties:
+  sysModel:
+    dof_name:
+      device.model
+
+  userFirmwareVer:
+    dof_name:
+      device.firmware_version
+
+  sysInfoModuleStatTemp:
+    use_oid_index: true
+    dof_name:
+      sensors.temperature_C
+
+  #Input ports 
+  inputAllName:
+    use_oid_index: true
+    dof_name:
+      parameters.input_ports.list_id
+    settable: false
+
+  inputAllGain:
+    use_oid_index: true
+    dof_name:
+      parameters.input_ports.gain_db
+    settable: true
+    
+  #input RF level sensor; not currently in DoF? currently placing in proprietary_fields
+  inputAllRFLeveldBm:
+    use_oid_index: true
+    dof_name:
+      proprietary_fields.input_ports.rf_level_dBm
+    settable: false
+
+  #Output ports
+  outputAllName:
+    use_oid_index: true
+    dof_name:
+      parameters.output_ports.list_id
+    settable: false
+
+  outputAllRFLeveldBm:
+    use_oid_index: true
+    dof_name:
+      sensors.output_ports.output_power_dBm
+    settable: false
+
+  #dof output_ports doesn't have gain or agc, so putting in proprietary
+  outputAllGain:
+    use_oid_index: true
+    dof_name: proprietary_fields.output_ports.gain_db
+    settable: true
+
+  outputAllAGCMode:
+    use_oid_index: true
+    dof_name: proprietary_fields.output_ports.agc_enable
+    settable: true
+
+  # Routing
+  #index=input_port, value = output_port
+  outputAllInChNr:
+    use_oid_index: true
+    # dof_name: proprietary_fields.input_ports.routed_output
+    dof_name: parameters.input_ports.connected_outputs
+    settable: true
+
+#Gain limit mappings 
+  sysInfoModulesMinEffectiveInputGain:
+    dof_name:
+      sensors.min_input_gain_dB
+
+  sysInfoModulesMaxEffectiveInputGain:
+    dof_name:
+      sensors.max_input_gain_dB
+
+  sysInfoModulesMinEffectiveOutputGain:
+    dof_name:
+      sensors.min_output_gain_dB
+
+  sysInfoModulesMaxEffectiveOutputGain:
+    dof_name:
+      sensors.max_output_gain_dB
+
+polled_oids:
+  - quintech

@@ -1,0 +1,38 @@
+# csi_properties.yml file
+#
+service_name: csi_quintech_rf_matrix_0
+code_version: V1.2
+service_description: "Template for creating a SNMP Based Device Proxy"
+heartbeat_interval_msecs: 5000
+keepalive_secs: 60
+outgoing_dir: /data
+
+poll_interval: 60
+snmp_to_dof_mapping_file: schemas/snmp_to_dof_mapping.yml
+
+# See DoF - 001_DoF-Common/CSI-001-000_CommonFields.ipynb for more information
+# Options: (Functionality for this proxy)
+#   - OFF - Proxy runs as normal
+#   - REFLECTOR - Proxy acts as if a device is plugged in, with no device communications
+#   - DEBUG - No support for this proxy
+#   - VERBOSE - No support for this proxy
+debug_mode: ['OFF']
+
+# comms information for SNMP connection:
+default_ip_address: 192.168.1.248
+#1, 2, or 3
+default_snmp_version: 1
+
+#used as username for v3
+default_read_community: public
+
+#for snmpv3 only, can also be sent via POST to /{service_name}.snmpv3_passwords - see docs for more information
+read_authentication_password: read-auth
+read_privacy_password: read-priv
+
+#used as username for v3
+default_write_community: private
+
+#for snmpv3 onlycan also be sent via POST to /{service_name}.snmpv3_passwords - see docs for more information
+write_authentication_password: write-auth
+write_privacy_password: write-priv

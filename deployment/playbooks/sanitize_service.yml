@@ -1,0 +1,14 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+# 
+# This playbook sanitizes services, images, and prereqs
+#
+
+- hosts: all
+  remote_user: csi
+  become: yes
+  become_method: sudo
+
+  roles:
+    - role: sanitize_service
+    

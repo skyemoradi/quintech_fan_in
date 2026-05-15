@@ -1,0 +1,14 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+# 
+# This playbook installs prereqs, docker, and uhd-related packages
+# Then it installs the images and the services
+#
+
+- hosts: all
+  remote_user: csi
+  become: yes
+  become_method: sudo
+
+  roles:
+    - role: install_image

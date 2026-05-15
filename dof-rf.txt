@@ -1,0 +1,143 @@
+
+
+No description has been provided for this image
+Common
+Software
+Infrastructure
+
+No description has been provided for this image
+RF Matrix
+
+v2023.08.06
+
+[CSI Main Page]
+Table of Contents
+
+    Objective
+    Related Documentation
+    DoF
+    Next Step
+    Revision History
+
+Objective
+
+This document describes the dictionary of fields for a RF Matrix / RF switch.
+Related Documentation
+
+Dictionary of Fields
+
+    CSI-001-000 Common Fields
+
+DoF
+Field 	Required 	Description 	Format/Units 	Data Type 	Read (R) /Write (W)
+Max GET Granularity
+/{service_name}.
+field_version_function 	Yes 	'rf_matrix-2023.08.06' for this version, which specifies the fields in this table. 	'rf_matrix-2023.08.06' 	string 	R
+/{service_name}
+Parameters (change triggers notification to C2 hubs) 					
+/{service_name}.
+parameters 	No 	Structure that contains the parameters for the proxy. Changes to parameters trigger a notification message to inform the C2 hub. 	N/A 	Parameters 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+matrix_type 	No 	Indicates the RF Matrix type.
+FAN_OUT: One input can fan out to multiple outputs.
+FAN_IN: Multiple inputs can be routed to a single output.
+BIDIRECTIONAL: Any number of inputs can connect to any number of outputs. 	'enum' 	string enum
+FAN_OUT
+FAN_IN
+BIDIRECTIONAL 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports 	No 	List of all the input ports and their configuration. 	N/A 	List of RF Matrix Input Ports 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index] 	No 	Configuration for the specified input port. 	N/A 	RF Matrix Input Port 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index].
+list_id 	No 	User-friendly label assigned to the input ports. Must be uniquely named within the list. 	N/A 	string 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index].
+agc_enable 	No 	Automatic gain control status on inputs before fanout. 	'enum' 	string enum
+ENABLED
+DISABLED 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index].
+agc_output_level_dbm 	No 	When AGC is enabled, sets the desired output level. 	dBm 	float 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index].
+gain_db 	No 	Gain setting of the inline amplifier between input and output ports. 	dB 	float 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+input_ports[index].
+connected_outputs 	No 	List of output ports to which the inputs are connected 	['out1', 'out2'] 	list string 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+output_ports 	No 	List of all the output ports and their configuration. 	N/A 	List of RF Matrix Output Ports 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+output_ports[index] 	No 	Configuration for the specified output port. 	N/A 	RF Matrix Output Port 	R/W
+/{service_name}/parameters
+/{service_name}.
+parameters.
+output_ports[index].
+list_id 	No 	User-friendly label assigned to the output port. Must be uniquely named within the list. 	N/A 	string 	R/W
+/{service_name}/parameters
+Sensors (C2 must poll for changes) 					
+/{service_name}.
+sensors 	No 	Sensors managed by the container. Sensor values change regularly and do not trigger a notification message to the C2 hub. It is the responsibility of the C2 hub to poll (or not poll) sensor values. 	N/A 	Sensors 	R
+/{service_name}/sensors
+/{service_name}.
+sensors.
+output_ports 	No 	List of all the output ports and their configuration. 	N/A 	List of RF Matrix Output Ports 	R
+/{service_name}/sensors
+/{service_name}.
+sensors.
+output_ports[index] 	No 	Configuration for the specified output port. 	N/A 	RF Matrix Output Port 	R
+/{service_name}/sensors
+/{service_name}.
+sensors.
+output_ports[index].
+list_id 	No 	User-friendly label assigned to the output port. Must be uniquely named within the list. 	N/A 	string 	R
+/{service_name}/sensors
+/{service_name}.
+sensors.
+output_ports[index].
+output_power_dBm 	No 	Measured power on the output port. 	dBm 	float 	R
+/{service_name}/sensors
+Next Step
+[Back: Power Distrobution Unit]
+Takes you to document about the Power Distribution Unit
+	[CSI Home]
+Takes you back to the CSI documentation page
+	[Next: SDR Recieve]
+Takes you to document about SDR Receive
+
+Revision History
+Date 	Change Description
+2023.08.06 	Minor format changes, move output power measure to sensors, added parameters.matrix_type
+2022.02.15 	Format Changes
+2021.12.22 	Renamed 'label' field in input_ports to 'list_id’
+Renamed 'label' field in output_ports to 'list_id’
+Minor formatting changes
+2021.10.10 	Changed format_version field to field_version_function.
+2021.08.31 	Reworked fields to match updated format
+2021.04.11 	Draft Release – Clarifications, typo corrections. Modified all fields that contain list to be singular. For example, 'parameters' renamed 'parameter'
+2021.03.31 	Draft Release – Initial
+No description has been provided for this image
+
+ 
+

@@ -1,0 +1,29 @@
+---
+# (c) 2022 The MITRE Corporation, All Rights Reserved
+#
+# This playbook loads the given docker image, specified by csi_image_file
+#    dest: "/home/{{ ansible_user }}/csifs/{{ csi_image_basename }}"
+
+- name: Determine image name
+  shell: basename {{ csi_image }}
+  register: csi_image_basename
+
+# - name: display csi_image_basename variable
+#   debug:
+#     var: csi_image_basename.stdout_lines.0
+
+- name: Copy image
+  ansible.builtin.copy:
+    src: "../images/{{ csi_image }}"
+    dest: "/home/{{ ansible_user }}/csifs/images/"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Load image
+  shell: "docker load --input /home/{{ ansible_user }}/csifs/images/{{ csi_image_basename.stdout_lines.0  }}"
+  
+- name: Clean up image tar file
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/csifs/images/{{ csi_image_basename.stdout_lines.0 }}"
+    state: absent
