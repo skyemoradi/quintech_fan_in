@@ -81,7 +81,7 @@ class ParamInputPorts(BaseModel):
         readOnly=False,
         json_schema_extra={
             "ADMINISTRATOR": ["READ", "WRITE"],
-            "SYSTEMOPERATOR": ["READ"]
+            "SYSTEMOPERATOR": ["READ", "WRITE"]
         },
     )
     connected_outputs: List[str] = Field(
@@ -91,7 +91,7 @@ class ParamInputPorts(BaseModel):
         readOnly=False,
         json_schema_extra={
             "ADMINISTRATOR": ["READ", "WRITE"],
-            "SYSTEMOPERATOR": ["READ"]
+            "SYSTEMOPERATOR": ["READ", "WRITE"]
         },
     )
 
@@ -232,7 +232,7 @@ class FaultEntries(BaseModel):
         readOnly= False,
         json_schema_extra={
             "ADMINISTRATOR": ["READ", "WRITE"],
-            "SYSTEMOPERATOR": ["READ"]
+            "SYSTEMOPERATOR": ["READ", "WRITE"]
         },
     )
     id: str = Field(
@@ -279,7 +279,7 @@ class Faults(BaseModel):
         readOnly= False,
         json_schema_extra={
             "ADMINISTRATOR": ["READ", "WRITE"],
-            "SYSTEMOPERATOR": ["READ"]
+            "SYSTEMOPERATOR": ["READ", "WRITE"]
         },
     )
     entries: Dict[str, FaultEntries] = Field(default_factory=dict)
@@ -373,7 +373,7 @@ class Logs(BaseModel):
         writeOnly= True,
         json_schema_extra={
             "ADMINISTRATOR": ["READ", "WRITE"],
-            "SYSTEMOPERATOR": ["READ"]
+            "SYSTEMOPERATOR": ["READ", "WRITE"]
         },
     )
     entries: Dict[str, LogEntries] = Field(default_factory=dict)
